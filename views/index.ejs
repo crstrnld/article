@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Aplikasi CRUD</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1><%= title %></h1>
+        
+        <% if (message) { %>
+            <div class="alert success"><%= message %></div>
+        <% } %>
+        
+        <% if (error) { %>
+            <div class="alert error"><%= error %></div>
+        <% } %>
+        
+        <div class="actions">
+            <a href="/users/create" class="btn btn-primary">Tambah Pengguna</a>
+            <a href="/stats" class="btn btn-secondary">Statistik</a>
+            
+            <form action="/search" method="GET" class="search-form">
+                <input type="text" name="keyword" placeholder="Cari nama, email, atau telepon..." 
+                       value="<%= typeof keyword !== 'undefined' ? keyword : '' %>">
+                <button type="submit" class="btn">Cari</button>
+            </form>
+        </div>
+        
+        <% if (users && users.length > 0) { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Telepon</th>
+                        <th>Usia</th>
+                        <th>Tanggal Daftar</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach((user, index) => { %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><%= user.nama %></td>
+                            <td><%= user.email %></td>
+                            <td><%= user.telepon || '-' %></td>
+                            <td><%= user.usia || '-' %></td>
+                            <td><%= new Date(user.createdAt).toLocaleDateString('id-ID') %></td>
+                            <td>
+                                <a href="/users/edit/<%= user.id %>" class="btn btn-warning">Edit</a>
+                                <a href="/users/delete/<%= user.id %>" 
+                                   class="btn btn-danger"
+                                   onclick="return confirm('Yakin hapus <%= user.nama %>?')">Hapus</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <p>Total: <strong><%= users.length %></strong> pengguna</p>
+        <% } else { %>
+            <div class="empty">
+                <p>Tidak ada data pengguna</p>
+                <a href="/users/create" class="btn btn-primary">Tambah Pengguna Pertama</a>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

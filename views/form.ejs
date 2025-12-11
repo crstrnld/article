@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Aplikasi CRUD</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1><%= title %></h1>
+        
+        <a href="/" class="btn btn-secondary">Kembali</a>
+        
+        <% if (error) { %>
+            <div class="alert error"><%= error %></div>
+        <% } %>
+        
+        <form action="<%= action %>" method="POST">
+            <div class="form-group">
+                <label for="nama">Nama Lengkap *</label>
+                <input type="text" id="nama" name="nama" 
+                       value="<%= user ? user.nama : '' %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" 
+                       value="<%= user ? user.email : '' %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="telepon">Telepon</label>
+                <input type="text" id="telepon" name="telepon" 
+                       value="<%= user ? user.telepon : '' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="usia">Usia</label>
+                <input type="number" id="usia" name="usia" 
+                       value="<%= user ? user.usia : '' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="alamat">Alamat</label>
+                <textarea id="alamat" name="alamat"><%= user ? user.alamat : '' %></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            <a href="/" class="btn btn-secondary">Batal</a>
+        </form>
+    </div>
+</body>
+</html>
