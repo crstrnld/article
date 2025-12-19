@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="container navbar">
+            <a href="/" class="logo">
+                🔐 <span>Auth System</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link active">Home</a></li>
+                <li><a href="/articles" class="nav-link">Articles</a></li>
+                <li><a href="/login" class="nav-link">Login</a></li>
+                <li><a href="/register" class="nav-link">Register</a></li>
+                <li><a href="/dashboard" class="nav-link">Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card mt-4">
+            <div class="card-header">
+                <h1 class="card-title">🔐 Complete Authentication & Authorization System</h1>
+            </div>
+            
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>🎯 Features:</strong>
+                    <ul>
+                        <li>JWT-based Authentication with Middleware</li>
+                        <li>Role-based Authorization (Admin/Member)</li>
+                        <li>Article Ownership Management</li>
+                        <li>SQLite Database (No MongoDB required)</li>
+                        <li>Complete CRUD Operations</li>
+                    </ul>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="articleCount">0</div>
+                        <div class="stat-label">Published Articles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">User Roles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">API Endpoints</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h2>🚀 Quick Start</h2>
+                    <div class="d-flex gap-2 mt-3">
+                        <button onclick="seedDatabase()" class="btn btn-primary">
+                            Seed Database
+                        </button>
+                        <a href="/login" class="btn btn-success">Login Demo</a>
+                        <a href="/register" class="btn btn-outline">Register Demo</a>
+                        <a href="/articles" class="btn">View Articles</a>
+                    </div>
+                </div>
+
+                <div id="seedResult" class="alert" style="display: none;"></div>
+
+                <div class="mb-4">
+                    <h2>📋 API Endpoints</h2>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Endpoint</th>
+                                    <th>Access</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge badge-primary">POST</span></td>
+                                    <td><code>/api/auth/register</code></td>
+                                    <td>Public</td>
+                                    <td>Register new user</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-primary">POST</span></td>
+                                    <td><code>/api/auth/login</code></td>
+                                    <td>Public</td>
+                                    <td>Login user</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-success">GET</span></td>
+                                    <td><code>/api/articles</code></td>
+                                    <td>Public</td>
+                                    <td>Get all published articles</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-primary">POST</span></td>
+                                    <td><code>/api/articles</code></td>
+                                    <td>Authenticated</td>
+                                    <td>Create new article</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-warning">PUT</span></td>
+                                    <td><code>/api/articles/:id</code></td>
+                                    <td>Owner/Admin</td>
+                                    <td>Update article</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-danger">DELETE</span></td>
+                                    <td><code>/api/articles/:id</code></td>
+                                    <td>Owner/Admin</td>
+                                    <td>Delete article</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge badge-success">GET</span></td>
+                                    <td><code>/api/admin/dashboard</code></td>
+                                    <td>Admin Only</td>
+                                    <td>Admin dashboard</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h2>🔑 Test Accounts (after seeding)</h2>
+                    <div class="card">
+                        <div class="d-flex gap-4">
+                            <div>
+                                <h3>👑 Admin Account</h3>
+                                <p><strong>Email:</strong> admin@example.com</p>
+                                <p><strong>Password:</strong> admin123</p>
+                                <p><strong>Permissions:</strong> Full access to all features</p>
+                            </div>
+                            <div>
+                                <h3>👤 Member Accounts</h3>
+                                <p><strong>Email:</strong> john@example.com</p>
+                                <p><strong>Password:</strong> password123</p>
+                                <p><strong>Permissions:</strong> Manage own articles only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadArticles() {
+            try {
+                const response = await fetch('/api/articles');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('articleCount').textContent = data.count;
+                }
+            } catch (error) {
+                console.log('Loading articles...');
+            }
+        }
+
+        async function seedDatabase() {
+            const result = document.getElementById('seedResult');
+            try {
+                const response = await fetch('/api/seed');
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'alert alert-success';
+                    result.innerHTML = `
+                        <strong>✅ Database Seeded Successfully!</strong><br><br>
+                        <strong>📊 Statistics:</strong><br>
+                        - Users created: ${data.stats.users}<br>
+                        - Articles created: ${data.stats.articles}<br><br>
+                        <strong>🔑 Test Accounts:</strong><br>
+                        ${data.testAccounts.map(acc => `
+                            - ${acc.email} (${acc.role}) - Password: ${acc.password}
+                        `).join('<br>')}
+                    `;
+                    result.style.display = 'block';
+                    
+                    setTimeout(loadArticles, 1000);
+                } else {
+                    result.className = 'alert alert-error';
+                    result.textContent = '❌ ' + data.error;
+                    result.style.display = 'block';
+                }
+            } catch (error) {
+                result.className = 'alert alert-error';
+                result.textContent = '❌ Network error: ' + error.message;
+                result.style.display = 'block';
+            }
+        }
+
+        loadArticles();
+    </script>
+</body>
+</html>

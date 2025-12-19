@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Auth System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>🔐 Login</h1>
+                <p>Access your account</p>
+            </div>
+            
+            <div class="auth-body">
+                <div id="message" class="alert" style="display: none;"></div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-control" 
+                               placeholder="Enter your email" value="admin@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" 
+                               placeholder="Enter your password" value="admin123" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="/register">Register here</a></p>
+                </div>
+                
+                <div class="mt-4">
+                    
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('message');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    message.className = 'alert alert-success';
+                    message.textContent = '✅ Login successful! Redirecting to dashboard...';
+                    message.style.display = 'block';
+                    
+                    // Save token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                   
+                } else {
+                    message.className = 'alert alert-error';
+                    message.textContent = '❌ ' + data.error;
+                    message.style.display = 'block';
+                }
+            } catch (error) {
+                message.className = 'alert alert-error';
+                message.textContent = '❌ Network error. Please try again.';
+                message.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - Auth System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="container navbar">
+            <a href="/" class="logo">
+                📰 <span>Articles</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/articles" class="active">Articles</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li id="adminNav" style="display: none;">
+                    <a href="#" onclick="viewAdminPanel()" style="background: #e74c3c; color: white;">
+                        👑 Admin
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-between align-center">
+                <h1 class="card-title">📰 All Articles</h1>
+                <div>
+                    <button id="createBtn" class="btn btn-primary" style="display: none;">
+                        + Create Article
+                    </button>
+                    <button id="myArticlesBtn" class="btn btn-outline" style="display: none;">
+                        My Articles
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Role Status -->
+                <div id="roleStatus" class="alert alert-info" style="display: none;">
+                    <strong>Role Status:</strong> <span id="currentRole">Loading...</span>
+                </div>
+                
+                <!-- Messages -->
+                <div id="message" class="alert" style="display: none;"></div>
+                
+                <!-- Admin Panel (hidden by default) -->
+                <div id="adminPanel" class="card" style="display: none;">
+                    <h2>👑 Admin Panel</h2>
+                    <div class="d-flex gap-2 mb-3">
+                        <button onclick="viewAllUsers()" class="btn btn-danger">View All Users</button>
+                        <button onclick="viewAllArticles()" class="btn btn-danger">View All Articles</button>
+                        <button onclick="viewAdminDashboard()" class="btn btn-danger">Admin Dashboard</button>
+                    </div>
+                    <div id="adminResult"></div>
+                </div>
+                
+                <!-- Articles Container -->
+                <div id="articlesContainer">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        // Update UI based on user role
+        function updateUI() {
+            const roleStatus = document.getElementById('roleStatus');
+            const currentRole = document.getElementById('currentRole');
+            const createBtn = document.getElementById('createBtn');
+            const myArticlesBtn = document.getElementById('myArticlesBtn');
+            const adminNav = document.getElementById('adminNav');
+            
+            if (user.id) {
+                roleStatus.style.display = 'block';
+                currentRole.textContent = `Logged in as: ${user.username} (${user.role})`;
+                
+                // Show create button for members and admins
+                if (user.role === 'member' || user.role === 'admin') {
+                    createBtn.style.display = 'block';
+                    myArticlesBtn.style.display = 'block';
+                }
+                
+                // Show admin navigation for admins only
+                if (user.role === 'admin') {
+                    adminNav.style.display = 'block';
+                }
+            } else {
+                roleStatus.style.display = 'block';
+                currentRole.textContent = 'You are viewing as a guest. Login to create articles.';
+            }
+        }
+        
+        async function loadArticles() {
+            const container = document.getElementById('articlesContainer');
+            
+            try {
+                const response = await fetch('/api/articles');
+                const data = await response.json();
+                
+                if (data.success && data.articles.length > 0) {
+                    let html = '<div class="articles-grid">';
+                    
+                    data.articles.forEach(article => {
+                        const isAuthor = user.id === article.author_id;
+                        const isAdmin = user.role === 'admin';
+                        const canManage = isAuthor || isAdmin;
+                        
+                        html += `
+                            <div class="article-card">
+                                <div class="article-meta">
+                                    <div>
+                                        <span class="badge ${article.status === 'published' ? 'badge-success' : 'badge-warning'}">
+                                            ${article.status}
+                                        </span>
+                                        <span class="role-badge ${article.author_role === 'admin' ? 'role-admin' : 'role-member'}">
+                                            ${article.author_role}
+                                        </span>
+                                    </div>
+                                    <small>${new Date(article.created_at).toLocaleDateString()}</small>
+                                </div>
+                                
+                                <h3 class="article-title">${article.title}</h3>
+                                <p class="article-excerpt">${article.content.substring(0, 200)}...</p>
+                                
+                                <div class="d-flex justify-between align-center">
+                                    <div>
+                                        <small><strong>Author:</strong> ${article.username}</small>
+                                    </div>
+                                    
+                                    ${canManage ? `
+                                        <div class="article-actions">
+                                            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${article.id}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                ${canManage ? `
+                                    <div class="alert alert-info mt-2" style="padding: 8px; font-size: 12px;">
+                                        <strong>🔧 You can manage this article</strong> 
+                                        (${isAuthor ? 'You are the author' : 'You are admin'})
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center p-5">
+                            <h3>📭 No Articles Yet</h3>
+                            <p>Be the first to create an article!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>❌ Error loading articles:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function deleteArticle(id) {
+            if (!confirm('Are you sure you want to delete this article?')) return;
+            
+            if (!token) {
+                showMessage('Please login first', 'error');
+                window.location.href = '/login';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/articles/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ ' + data.message, 'success');
+                    loadArticles();
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Network error', 'error');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.className = `alert alert-${type}`;
+            message.textContent = text;
+            message.style.display = 'block';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Create Article
+        document.getElementById('createBtn').addEventListener('click', () => {
+            if (!token) {
+                showMessage('Please login first', 'error');
+                window.location.href = '/login';
+                return;
+            }
+            
+            const title = prompt('Enter article title:');
+            if (!title) return;
+            
+            const content = prompt('Enter article content:');
+            if (!content) return;
+            
+            const status = confirm('Publish immediately? (OK = published, Cancel = draft)') 
+                ? 'published' 
+                : 'draft';
+            
+            fetch('/api/articles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ title, content, status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('✅ Article created successfully!', 'success');
+                    loadArticles();
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            });
+        });
+        
+        // View My Articles
+        document.getElementById('myArticlesBtn').addEventListener('click', () => {
+            if (!token) {
+                showMessage('Please login first', 'error');
+                window.location.href = '/login';
+                return;
+            }
+            
+            fetch('/api/articles/my/all', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`You have ${data.count} articles.`);
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+            });
+        });
+        
+        // Admin Functions
+        function viewAdminPanel() {
+            if (user.role !== 'admin') {
+                showMessage('❌ Access denied. Admin only.', 'error');
+                return;
+            }
+            
+            const adminPanel = document.getElementById('adminPanel');
+            adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        async function viewAllUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                const result = document.getElementById('adminResult');
+                
+                if (data.success) {
+                    let html = '<div class="alert alert-success"><h4>👥 All Users</h4>';
+                    data.users.forEach(u => {
+                        html += `
+                            <div style="border-bottom: 1px solid #ddd; padding: 8px 0;">
+                                <strong>${u.username}</strong> (${u.email})<br>
+                                Role: <span class="role-badge ${u.role}">${u.role}</span><br>
+                                Joined: ${new Date(u.created_at).toLocaleDateString()}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('adminResult').innerHTML = 
+                    `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function viewAllArticles() {
+            try {
+                const response = await fetch('/api/admin/articles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                const result = document.getElementById('adminResult');
+                
+                if (data.success) {
+                    let html = '<div class="alert alert-success"><h4>📄 All Articles (including drafts)</h4>';
+                    data.articles.forEach(a => {
+                        html += `
+                            <div style="border-bottom: 1px solid #ddd; padding: 8px 0;">
+                                <strong>${a.title}</strong><br>
+                                Status: <span class="badge ${a.status === 'published' ? 'badge-success' : 'badge-warning'}">${a.status}</span>
+                                | Author: ${a.username} (${a.author_role})<br>
+                                Created: ${new Date(a.created_at).toLocaleDateString()}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('adminResult').innerHTML = 
+                    `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function viewAdminDashboard() {
+            try {
+                const response = await fetch('/api/admin/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                const result = document.getElementById('adminResult');
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>📊 Admin Dashboard</h4>
+                            <div class="stats-grid" style="margin-top: 15px;">
+                                <div class="stat-card">
+                                    <div class="stat-value">${data.stats.totalUsers}</div>
+                                    <div class="stat-label">Total Users</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${data.stats.totalArticles}</div>
+                                    <div class="stat-label">Total Articles</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${data.stats.admins}</div>
+                                    <div class="stat-label">Admins</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">${data.stats.members}</div>
+                                    <div class="stat-label">Members</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('adminResult').innerHTML = 
+                    `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Initialize
+        updateUI();
+        loadArticles();
+    </script>
+</body>
+</html>
