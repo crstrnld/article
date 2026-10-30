@@ -751,19 +751,15 @@ app.get('/dashboard', (req, res) => {
 // ===== START SERVER =====
 app.listen(PORT, () => {
     console.log(`
-╔═══════════════════════════════════════════════════════════════╗
-║                🔐 AUTH SYSTEM STARTED                        ║
-║          Complete Middleware Authentication                   ║
-╚═══════════════════════════════════════════════════════════════╝
 
-🌐 Server running on: http://localhost:${PORT}
+Server running on: http://localhost:${PORT}
 
-📋 AUTHENTICATION ENDPOINTS:
+AUTHENTICATION ENDPOINTS:
   POST   /api/auth/register  - Register new user
   POST   /api/auth/login     - Login user
   GET    /api/auth/me        - Get current user (requires auth)
 
-📰 ARTICLE ENDPOINTS:
+ARTICLE ENDPOINTS:
   GET    /api/articles       - Get all published articles (Public)
   GET    /api/articles/:id   - Get single article
   POST   /api/articles       - Create article (Auth required)
@@ -771,28 +767,28 @@ app.listen(PORT, () => {
   DELETE /api/articles/:id   - Delete article (Owner/Admin only)
   GET    /api/articles/my/all - Get my articles (Auth required)
 
-👑 ADMIN ENDPOINTS:
+ADMIN ENDPOINTS:
   GET    /api/admin/dashboard - Admin dashboard (Admin only)
   GET    /api/admin/users    - Get all users (Admin only)
   GET    /api/admin/articles - Get all articles including drafts (Admin only)
   DELETE /api/admin/articles/:id - Delete any article (Admin only)
 
-🗃️  UTILITY ENDPOINTS:
+UTILITY ENDPOINTS:
   GET    /api/seed          - Seed database with test data
   GET    /api/health        - Health check
 
-🔑 TEST ACCOUNTS (after seeding):
-  👑 Admin:    admin@example.com   / admin123
-  👤 Member 1: john@example.com    / password123
-  👤 Member 2: jane@example.com    / password123
+TEST ACCOUNTS (after seeding):
+  Admin:    admin@example.com   / admin123
+  Member 1: john@example.com    / password123
+  Member 2: jane@example.com    / password123
 
-🌐 FRONTEND PAGES:
-  🏠  /         - Homepage
-  🔐  /login    - Login page
-  📝  /register - Register page
-  📰  /articles - Articles page
-  📊  /dashboard - Dashboard page
+FRONTEND PAGES:
+  /         - Homepage
+  /login    - Login page
+  /register - Register page
+  /articles - Articles page
+  /dashboard - Dashboard page
 
-⚡ Run 'npm run dev' to start development server
+Run 'npm run dev' to start development server
 `);
 });
